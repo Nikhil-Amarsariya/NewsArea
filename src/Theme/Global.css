@@ -1,0 +1,30 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background-color: #f5f7fb;
+  overflow-x: hidden;
+}
+
+.news-heading {
+  width: 100%;
+  text-align: center;
+  margin: 2rem 0;
+  padding: 0 1rem;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #64748b;
+  border-radius: 10px;
+}

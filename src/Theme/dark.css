@@ -1,0 +1,21 @@
+body.dark {
+  background-color: #0f172a;
+  color: white;
+}
+
+body.dark .card {
+  background-color: #1e293b !important;
+  color: white !important;
+}
+
+body.dark .card-title {
+  color: white !important;
+}
+
+body.dark .card-text {
+  color: #cbd5e1 !important;
+}
+
+body.dark .news-heading {
+  color: white;
+}

@@ -1,0 +1,36 @@
+.card {
+  border: none !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+  transition: 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.card-img-top {
+  height: 220px;
+  object-fit: cover;
+}
+
+.card-title {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.card-text {
+  color: #475569;
+}
+
+.news-source-badge {
+  right: 10px;
+  top: 10px;
+  z-index: 1;
+}
+
+.btn-primary {
+  border-radius: 8px !important;
+}

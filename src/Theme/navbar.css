@@ -1,0 +1,18 @@
+.MuiAppBar-root {
+  background: #0f172a !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15) !important;
+}
+
+.MuiToolbar-root {
+  min-height: 70px !important;
+}
+
+.MuiButton-root {
+  text-transform: none !important;
+  border-radius: 8px !important;
+  transition: 0.3s ease !important;
+}
+
+.MuiButton-root:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}

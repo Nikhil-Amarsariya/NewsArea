@@ -1,0 +1,14 @@
+body {
+  background-color: #f5f7fb;
+  color: #0f172a;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.card {
+  background: white !important;
+  color: #0f172a !important;
+}
+
+.news-heading {
+  color: #0f172a;
+}
