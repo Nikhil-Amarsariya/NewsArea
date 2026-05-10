@@ -50,7 +50,7 @@ class NewsInfinite extends Component {
 
     this.setState({ loading: true });
 
-    const url = `https://newsapi.org/v2/top-headlines?country=${country}&category=${category}&page=${page}&pageSize=${pageSize}&apiKey=${import.meta.env.VITE_NEWS_API}`;
+    const url = `https://gnews.io/api/v4/top-headlines?category=${category}&lang=en&country=${country}&max=${pageSize}&apikey=${import.meta.env.VITE_GNEWS_API}`;
 
     this.props.setProgress(30);
 
@@ -74,7 +74,7 @@ class NewsInfinite extends Component {
 
     const { country, category, pageSize } = this.props;
 
-    const url = `https://newsapi.org/v2/top-headlines?country=${country}&category=${category}&page=${nextPage}&pageSize=${pageSize}&apiKey=${import.meta.env.VITE_NEWS_API}`;
+    const url = `https://gnews.io/api/v4/top-headlines?category=${category}&lang=en&country=${country}&max=${pageSize}&apikey=${import.meta.env.VITE_GNEWS_API}`;
 
     const data = await fetch(url);
 
