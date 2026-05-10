@@ -23,15 +23,13 @@ function NewsItem({ title, description, imageUrl, newsUrl, author, publishedAt, 
         </span>
 
         <img
-          src={imageUrl || FALLBACK_IMAGE}
-          onError={({ currentTarget }) => {
-            if (!currentTarget.src.endsWith(FALLBACK_IMAGE)) {
-              currentTarget.src = FALLBACK_IMAGE;
-            }
-          }}
-          className="card-img-top"
-          alt={title || "News article"}
-        />
+  src={imageUrl}
+  onError={(e) => {
+    e.target.src =
+      "/news-placeholder.svg";
+  }}
+  alt="news"
+/>
 
         <div className="card-body d-flex flex-column">
           <h5 className="card-title">{truncateText(title, 60, "No Title")}</h5>

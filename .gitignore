@@ -26,5 +26,5 @@ coverage
 *.sln
 *.sw?
 
-# Local Netlify folder
-.netlify
+# Optional npm cache directory
+.npm    

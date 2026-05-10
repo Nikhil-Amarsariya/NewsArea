@@ -7,8 +7,8 @@ import SkeletonCard from "./SkeletonCard";
 class NewsInfinite extends Component {
   static defaultProps = {
     country: "us",
-    pageSize: 6,
-    category: "general",
+    pageSize: 10,
+    category: "top",
   };
 
   static propTypes = {
@@ -22,8 +22,7 @@ class NewsInfinite extends Component {
 
     this.state = {
       articles: [],
-      page: 1,
-      totalResults: 0,
+      nextPage: null,
       loading: false,
     };
   }
@@ -37,64 +36,120 @@ class NewsInfinite extends Component {
     if (prevProps.category !== this.props.category) {
       this.setState(
         {
-          page: 1,
           articles: [],
+          nextPage: null,
         },
-        this.fetchNews
+        () => this.fetchNews()
       );
     }
   }
+
+  // Remove duplicate articles
+  removeDuplicates = (articles) => {
+    return articles.filter(
+      (article, index, self) =>
+        index ===
+        self.findIndex(
+          (a) =>
+            a.title?.trim().toLowerCase() ===
+              article.title?.trim().toLowerCase() ||
+            a.description?.trim().toLowerCase() ===
+              article.description?.trim().toLowerCase() ||
+            a.image_url === article.image_url
+        )
+    );
+  };
+
   fetchNews = async () => {
-    const { country, category, pageSize } = this.props;
-    const { page } = this.state;
+    try {
+      const { country, category, pageSize } = this.props;
 
-    this.setState({ loading: true });
+      this.setState({ loading: true });
 
-    const url = `https://newsapi.org/v2/top-headlines?country=${country}&category=${category}&page=${page}&pageSize=${pageSize}&apiKey=${import.meta.env.VITE_GNEWS_API}`;
+      const url = `https://newsdata.io/api/1/latest?apikey=${
+        import.meta.env.VITE_NEWSDATA_API
+      }&country=${country}&category=${category}&language=en&size=${pageSize}`;
 
-    this.props.setProgress(30);
+      this.props.setProgress(30);
 
-    const data = await fetch(url);
+      const data = await fetch(url);
 
-    this.props.setProgress(70);
+      this.props.setProgress(70);
 
-    const parsedData = await data.json();
+      const parsedData = await data.json();
 
-    this.props.setProgress(100);
+      this.props.setProgress(100);
 
-    this.setState({
-      articles: parsedData.articles || [],
-      totalResults: parsedData.totalResults || 0,
-      loading: false,
-    });
+      const articles = Array.isArray(parsedData.results)
+        ? parsedData.results
+        : [];
+
+      const filteredArticles = this.removeDuplicates(
+        articles
+      );
+
+      this.setState({
+        articles: filteredArticles,
+        nextPage: parsedData.nextPage || null,
+        loading: false,
+      });
+    } catch (error) {
+      console.log("Fetch Error:", error);
+
+      this.setState({
+        loading: false,
+      });
+    }
   };
 
   fetchMoreData = async () => {
-    const nextPage = this.state.page + 1;
+    try {
+      if (!this.state.nextPage) return;
 
-    const { country, category, pageSize } = this.props;
+      const { country, category, pageSize } = this.props;
 
-    const url = `https://newsapi.org/v2/top-headlines?country=${country}&category=${category}&page=${nextPage}&pageSize=${pageSize}&apiKey=${import.meta.env.VITE_GNEWS_API}`;
+      const url = `https://newsdata.io/api/1/latest?apikey=${
+        import.meta.env.VITE_NEWSDATA_API
+      }&country=${country}&category=${category}&language=en&size=${pageSize}&page=${this.state.nextPage}`;
 
-    const data = await fetch(url);
+      const data = await fetch(url);
 
-    const parsedData = await data.json();
+      const parsedData = await data.json();
 
-    this.setState({
-      articles: this.state.articles.concat(parsedData.articles || []),
-      page: nextPage,
-      totalResults: parsedData.totalResults || 0,
-    });
+      const newArticles = Array.isArray(
+        parsedData.results
+      )
+        ? parsedData.results
+        : [];
+
+      const allArticles = [
+        ...this.state.articles,
+        ...newArticles,
+      ];
+
+      const filteredArticles = this.removeDuplicates(
+        allArticles
+      );
+
+      this.setState({
+        articles: filteredArticles,
+        nextPage: parsedData.nextPage || null,
+      });
+    } catch (error) {
+      console.log("Load More Error:", error);
+    }
   };
+
   render() {
     return (
       <>
         <div className="d-flex justify-content-center">
           <h2 className="news-heading text-capitalize">
             NewsArea -
-            {this.props.category === "general"
+            {this.props.category === "top"
               ? " Home"
-              : ` ${this.props.category}`} Headlines
+              : ` ${this.props.category}`}{" "}
+            Headlines
           </h2>
         </div>
 
@@ -111,7 +166,7 @@ class NewsInfinite extends Component {
         <InfiniteScroll
           dataLength={this.state.articles.length}
           next={this.fetchMoreData}
-          hasMore={this.state.articles.length !== this.state.totalResults}
+          hasMore={this.state.nextPage !== null}
           loader={
             <div className="row">
               {Array(3)
@@ -129,19 +184,44 @@ class NewsInfinite extends Component {
         >
           <div className="container">
             <div className="row">
-              {this.state.articles.map((article) => (
-                <div className="col-md-4" key={article.url}>
-                  <NewsItem
-                    title={article.title}
-                    description={article.description}
-                    imageUrl={article.urlToImage}
-                    newsUrl={article.url}
-                    author={article.author}
-                    publishedAt={article.publishedAt}
-                    source={article.source.name}
-                  />
-                </div>
-              ))}
+              {Array.isArray(this.state.articles) &&
+                this.state.articles
+                  .filter(
+                    (article) =>
+                      article.title &&
+                      article.description
+                  )
+                  .map((article, index) => (
+                    <div
+                      className="col-md-4"
+                      key={article.link || index}
+                    >
+                      <NewsItem
+                        title={article.title}
+                        description={
+                          article.description
+                        }
+                        imageUrl={
+                          article.image_url &&
+                          article.image_url.startsWith(
+                            "http"
+                          )
+                            ? article.image_url
+                            : "/news-placeholder.svg"
+                        }
+                        newsUrl={article.link}
+                        author={
+                          article.creator?.[0] ||
+                          "Unknown"
+                        }
+                        publishedAt={article.pubDate}
+                        source={
+                          article.source_id ||
+                          "News Source"
+                        }
+                      />
+                    </div>
+                  ))}
             </div>
           </div>
         </InfiniteScroll>
