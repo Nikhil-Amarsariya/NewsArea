@@ -16,6 +16,7 @@ class NewsInfinite extends Component {
     country: PropTypes.string,
     pageSize: PropTypes.number,
     category: PropTypes.string,
+    setProgress: PropTypes.func,
   };
 
   constructor(props) {
@@ -30,7 +31,6 @@ class NewsInfinite extends Component {
   }
 
   componentDidMount() {
-    this.props.setProgress(10);
     this.fetchNews();
   }
 
@@ -41,28 +41,36 @@ class NewsInfinite extends Component {
           page: 1,
           articles: [],
         },
-        this.fetchNews
+        () => {
+          this.fetchNews();
+        }
       );
     }
   }
 
+  // FETCH INITIAL NEWS
+
   fetchNews = async () => {
     try {
+      this.props.setProgress?.(10);
+
       const { country, category, pageSize } = this.props;
+      const { page } = this.state;
 
       this.setState({ loading: true });
 
-      const url = `https://gnews.io/api/v4/top-headlines?category=${category}&lang=en&country=${country}&max=${pageSize}&apikey=${import.meta.env.VITE_GNEWS_API}`;
+      // CALL YOUR NETLIFY FUNCTION
+      const url = `/.netlify/functions/news?category=${category}&country=${country}&page=${page}&pageSize=${pageSize}`;
 
-      this.props.setProgress(30);
+      this.props.setProgress?.(40);
 
-      const data = await fetch(url);
+      const response = await fetch(url);
 
-      this.props.setProgress(70);
+      this.props.setProgress?.(70);
 
-      const parsedData = await data.json();
+      const parsedData = await response.json();
 
-      this.props.setProgress(100);
+      this.props.setProgress?.(100);
 
       this.setState({
         articles: parsedData.articles || [],
@@ -71,7 +79,7 @@ class NewsInfinite extends Component {
       });
 
     } catch (error) {
-      console.error(error);
+      console.error("Fetch News Error:", error);
 
       this.setState({
         loading: false,
@@ -79,17 +87,23 @@ class NewsInfinite extends Component {
     }
   };
 
+  // FETCH MORE NEWS FOR INFINITE SCROLL
+
   fetchMoreData = async () => {
     try {
+      const nextPage = this.state.page + 1;
+
       const { country, category, pageSize } = this.props;
 
-      const url = `https://gnews.io/api/v4/top-headlines?category=${category}&lang=en&country=${country}&max=${pageSize}&apikey=${import.meta.env.VITE_GNEWS_API}`;
+      const url = `/.netlify/functions/news?category=${category}&country=${country}&page=${nextPage}&pageSize=${pageSize}`;
 
-      const data = await fetch(url);
+      const response = await fetch(url);
 
-      const parsedData = await data.json();
+      const parsedData = await response.json();
 
       this.setState({
+        page: nextPage,
+
         articles: this.state.articles.concat(
           parsedData.articles || []
         ),
@@ -98,7 +112,7 @@ class NewsInfinite extends Component {
       });
 
     } catch (error) {
-      console.error(error);
+      console.error("Infinite Scroll Error:", error);
     }
   };
 
@@ -112,7 +126,8 @@ class NewsInfinite extends Component {
             NewsArea -
             {this.props.category === "general"
               ? " Home"
-              : ` ${this.props.category}`} Headlines
+              : ` ${this.props.category}`}{" "}
+            Headlines
           </h2>
         </div>
 
@@ -136,7 +151,7 @@ class NewsInfinite extends Component {
           dataLength={this.state.articles.length}
           next={this.fetchMoreData}
           hasMore={
-            this.state.articles.length !==
+            this.state.articles.length <
             this.state.totalResults
           }
           loader={
@@ -164,15 +179,22 @@ class NewsInfinite extends Component {
           <div className="container">
             <div className="row">
               {this.state.articles.map((article) => (
-                <div className="col-md-4" key={article.url}>
+                <div
+                  className="col-md-4 mb-4"
+                  key={article.url}
+                >
                   <NewsItem
                     title={article.title}
                     description={article.description}
                     imageUrl={article.image}
                     newsUrl={article.url}
-                    author={article.source?.name || "Unknown"}
+                    author={
+                      article.source?.name || "Unknown"
+                    }
                     publishedAt={article.publishedAt}
-                    source={article.source?.name || "Unknown"}
+                    source={
+                      article.source?.name || "Unknown"
+                    }
                   />
                 </div>
               ))}
