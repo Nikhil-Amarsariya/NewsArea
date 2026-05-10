@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import PropTypes from "prop-types";
+
 import NewsItem from "./NewsItem";
 import SkeletonCard from "./SkeletonCard";
 
@@ -44,51 +45,68 @@ class NewsInfinite extends Component {
       );
     }
   }
+
   fetchNews = async () => {
-    const { country, category, pageSize } = this.props;
-    const { page } = this.state;
+    try {
+      const { country, category, pageSize } = this.props;
 
-    this.setState({ loading: true });
+      this.setState({ loading: true });
 
-    const url = `https://gnews.io/api/v4/top-headlines?category=${category}&lang=en&country=${country}&max=${pageSize}&apikey=${import.meta.env.VITE_GNEWS_API}`;
+      const url = `https://gnews.io/api/v4/top-headlines?category=${category}&lang=en&country=${country}&max=${pageSize}&apikey=${import.meta.env.VITE_GNEWS_API}`;
 
-    this.props.setProgress(30);
+      this.props.setProgress(30);
 
-    const data = await fetch(url);
+      const data = await fetch(url);
 
-    this.props.setProgress(70);
+      this.props.setProgress(70);
 
-    const parsedData = await data.json();
+      const parsedData = await data.json();
 
-    this.props.setProgress(100);
+      this.props.setProgress(100);
 
-    this.setState({
-      articles: parsedData.articles || [],
-      totalResults: parsedData.totalResults || 0,
-      loading: false,
-    });
+      this.setState({
+        articles: parsedData.articles || [],
+        totalResults: parsedData.totalArticles || 0,
+        loading: false,
+      });
+
+    } catch (error) {
+      console.error(error);
+
+      this.setState({
+        loading: false,
+      });
+    }
   };
 
   fetchMoreData = async () => {
-    const nextPage = this.state.page + 1;
+    try {
+      const { country, category, pageSize } = this.props;
 
-    const { country, category, pageSize } = this.props;
+      const url = `https://gnews.io/api/v4/top-headlines?category=${category}&lang=en&country=${country}&max=${pageSize}&apikey=${import.meta.env.VITE_GNEWS_API}`;
 
-    const url = `https://gnews.io/api/v4/top-headlines?category=${category}&lang=en&country=${country}&max=${pageSize}&apikey=${import.meta.env.VITE_GNEWS_API}`;
+      const data = await fetch(url);
 
-    const data = await fetch(url);
+      const parsedData = await data.json();
 
-    const parsedData = await data.json();
+      this.setState({
+        articles: this.state.articles.concat(
+          parsedData.articles || []
+        ),
 
-    this.setState({
-      articles: this.state.articles.concat(parsedData.articles || []),
-      page: nextPage,
-      totalResults: parsedData.totalResults || 0,
-    });
+        totalResults: parsedData.totalArticles || 0,
+      });
+
+    } catch (error) {
+      console.error(error);
+    }
   };
+
   render() {
     return (
       <>
+        {/* HEADING */}
+
         <div className="d-flex justify-content-center">
           <h2 className="news-heading text-capitalize">
             NewsArea -
@@ -98,31 +116,47 @@ class NewsInfinite extends Component {
           </h2>
         </div>
 
-        {this.state.loading && (
-          <div className="row">
-            {Array(3)
-              .fill()
-              .map((_, index) => (
-                <SkeletonCard key={index} />
-              ))}
-          </div>
-        )}
+        {/* INITIAL LOADING */}
 
-        <InfiniteScroll
-          dataLength={this.state.articles.length}
-          next={this.fetchMoreData}
-          hasMore={this.state.articles.length !== this.state.totalResults}
-          loader={
+        {this.state.loading && (
+          <div className="container">
             <div className="row">
-              {Array(3)
+              {Array(6)
                 .fill()
                 .map((_, index) => (
                   <SkeletonCard key={index} />
                 ))}
             </div>
+          </div>
+        )}
+
+        {/* NEWS */}
+
+        <InfiniteScroll
+          dataLength={this.state.articles.length}
+          next={this.fetchMoreData}
+          hasMore={
+            this.state.articles.length !==
+            this.state.totalResults
+          }
+          loader={
+            <div className="container">
+              <div className="row">
+                {Array(3)
+                  .fill()
+                  .map((_, index) => (
+                    <SkeletonCard key={index} />
+                  ))}
+              </div>
+            </div>
           }
           endMessage={
-            <p style={{ textAlign: "center" }}>
+            <p
+              style={{
+                textAlign: "center",
+                marginTop: "20px",
+              }}
+            >
               <b>No more news</b>
             </p>
           }
@@ -134,11 +168,11 @@ class NewsInfinite extends Component {
                   <NewsItem
                     title={article.title}
                     description={article.description}
-                    imageUrl={article.urlToImage}
+                    imageUrl={article.image}
                     newsUrl={article.url}
-                    author={article.author}
+                    author={article.source?.name || "Unknown"}
                     publishedAt={article.publishedAt}
-                    source={article.source.name}
+                    source={article.source?.name || "Unknown"}
                   />
                 </div>
               ))}
