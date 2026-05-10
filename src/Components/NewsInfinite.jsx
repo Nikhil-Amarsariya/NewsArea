@@ -23,7 +23,6 @@ class NewsInfinite extends Component {
 
     this.state = {
       articles: [],
-      page: 1,
       totalResults: 0,
       loading: false,
     };
@@ -38,7 +37,6 @@ class NewsInfinite extends Component {
     if (prevProps.category !== this.props.category) {
       this.setState(
         {
-          page: 1,
           articles: [],
         },
         this.fetchNews
@@ -52,15 +50,15 @@ class NewsInfinite extends Component {
 
       this.setState({ loading: true });
 
-      const url = `https://gnews.io/api/v4/top-headlines?category=${category}&lang=en&country=${country}&max=${pageSize}&apikey=${import.meta.env.VITE_GNEWS_API}`;
+      const url = `https://corsproxy.io/?https://gnews.io/api/v4/top-headlines?category=${category}&lang=en&country=${country}&max=${pageSize}&apikey=${import.meta.env.VITE_GNEWS_API}`;
 
       this.props.setProgress(30);
 
-      const data = await fetch(url);
+      const response = await fetch(url);
 
       this.props.setProgress(70);
 
-      const parsedData = await data.json();
+      const parsedData = await response.json();
 
       this.props.setProgress(100);
 
@@ -71,7 +69,7 @@ class NewsInfinite extends Component {
       });
 
     } catch (error) {
-      console.error(error);
+      console.error("Fetch Error:", error);
 
       this.setState({
         loading: false,
@@ -80,26 +78,8 @@ class NewsInfinite extends Component {
   };
 
   fetchMoreData = async () => {
-    try {
-      const { country, category, pageSize } = this.props;
-
-      const url = `https://gnews.io/api/v4/top-headlines?category=${category}&lang=en&country=${country}&max=${pageSize}&apikey=${import.meta.env.VITE_GNEWS_API}`;
-
-      const data = await fetch(url);
-
-      const parsedData = await data.json();
-
-      this.setState({
-        articles: this.state.articles.concat(
-          parsedData.articles || []
-        ),
-
-        totalResults: parsedData.totalArticles || 0,
-      });
-
-    } catch (error) {
-      console.error(error);
-    }
+    // GNews free API has limited pagination support
+    return;
   };
 
   render() {
@@ -130,15 +110,12 @@ class NewsInfinite extends Component {
           </div>
         )}
 
-        {/* NEWS */}
+        {/* NEWS SECTION */}
 
         <InfiniteScroll
           dataLength={this.state.articles.length}
           next={this.fetchMoreData}
-          hasMore={
-            this.state.articles.length !==
-            this.state.totalResults
-          }
+          hasMore={false}
           loader={
             <div className="container">
               <div className="row">
@@ -157,17 +134,19 @@ class NewsInfinite extends Component {
                 marginTop: "20px",
               }}
             >
-              <b>No more news</b>
+              <b>No more news available</b>
             </p>
           }
         >
           <div className="container">
             <div className="row">
-              {this.state.articles.map((article) => (
-                <div className="col-md-4" key={article.url}>
+              {this.state.articles.map((article, index) => (
+                <div className="col-md-4 mb-4" key={index}>
                   <NewsItem
-                    title={article.title}
-                    description={article.description}
+                    title={article.title || "No Title"}
+                    description={
+                      article.description || "No Description Available"
+                    }
                     imageUrl={article.image}
                     newsUrl={article.url}
                     author={article.source?.name || "Unknown"}
