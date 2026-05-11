@@ -3,6 +3,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import PropTypes from "prop-types";
 import NewsItem from "./NewsItem";
 import SkeletonCard from "./SkeletonCard";
+const apiKey = import.meta.env.VITE_NEWS_API;
 
 class NewsInfinite extends Component {
   static defaultProps = {
